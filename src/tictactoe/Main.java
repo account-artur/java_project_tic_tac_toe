@@ -1,112 +1,106 @@
 package tictactoe;
 
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
-    private static final int ROWS = 3;
-    private static final int COLS = 3;
+    static Scanner scanner = new Scanner(System.in);
+    static char[][] board = new char[3][3];
+    static int Xcord, Ycord;
 
     public static void main(String[] args) {
-        System.out.print("Enter cells: ");
-        String f = new Scanner(System.in).next().toUpperCase();
-        print(f);
-        System.out.println(getState(f));
+        getInput();
+        drawTable(board);
+        getCoordinates();
+        drawTable(board);
     }
 
-    private static GameState getState(String f) {
-        GameState state = playingOrError(f);
-        if (state == GameState.ERROR) return state;
-        char winner = getWinnerCols(f, '_');
-        winner = getWinnerRows(f, winner);
-        winner = getWinnerDiags(f, winner);
-        if (winner == 0) return GameState.ERROR;
-        if (winner == 'X') return GameState.X_WINS;
-        if (winner == 'O') return GameState.O_WINS;
-        return state;
+    static void getInput(){ // gets matrix input from user as String
+        System.out.println("Enter cells: ");
+        String cells = scanner.next();
+        fillTable(board, cells);
     }
 
-    private static GameState playingOrError(String f) {
-        int x = 0;
-        int o = 0;
-        int empty = 0;
-        for (char c : f.toCharArray()) {
-            if (c == 'X') x++;
-            if (c == 'O') o++;
-            if (c == '_') empty++;
+    static void getCoordinates(){ // gets coordinates and checks whether it satisfies specific conditions
+        System.out.println("Enter coordinates: ");
+        while(true){
+
+            while(!(scanner.hasNextInt()) ){
+                System.out.println("You should enter numbers!");
+            }
+
+            Xcord = scanner.nextInt();
+            Ycord = scanner.nextInt();
+
+            if(Xcord > 3 || Xcord < 1 || Ycord > 3 || Ycord < 1){
+                System.out.println("Coordinates should be from 1 to 3!");
+            } else {
+                ninetyRight(board);
+                if(isEmpty(board, Xcord, Ycord)){
+                    fillValue(board, 'X', Xcord, Ycord);
+                    ninetyLeft(board);
+                    break;
+                } else {
+                    System.out.println("This cell is occupied! Choose another one!");
+                }
+                ninetyLeft(board);
+            }
         }
-        if (Math.abs(x - o) > 1) return GameState.ERROR;
-        return empty > 0 ? GameState.PLAYING : GameState.FINISHED;
     }
 
-    private static char getWinner(char o, char n) {
-        if (o + n == 'O' + 'X' || o == 0) return 0;
-        return (char) (o + n - '_');
+    static void drawTable(char[][] arr){    // draws matrix as a table
+        System.out.println("---------");
+        for(int i = 0; i < 3; i++){
+            System.out.print("| ");
+            for(int j = 0; j < 3; j++){
+                System.out.print(arr[i][j] + " ");
+            }
+            System.out.println("|");
+        }
+        System.out.println("---------");
     }
 
-    private static char getWinnerDiags(String f, char w) {
-        w = getWinner(w, getWinnerDiag(f, true));
-        w = getWinner(w, getWinnerDiag(f, false));
-        return w;
+    static char[][] fillTable(char[][] arr, String input){ // fills the whole matrix by the String put by user
+        int counter = 0;
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++){
+                arr[i][j] = input.charAt(counter);
+                counter++;
+            }
+        }
+        return arr;
     }
 
-    private static char getWinnerCols(String f, char w) {
-        for (int i = 0; i < COLS && w != 0; i++)
-            w = getWinner(w, getWinnerCol(f, i));
-        return w;
+    static char[][] fillValue(char[][] arr, char value, int X, int Y){ // fills matrix with a specific value
+        arr[X-1][Y-1] = value;
+        return arr;
     }
 
-    private static char getWinnerRows(String f, char w) {
-        for (int i = 0; i < ROWS && w != 0; i++)
-            w = getWinner(w, getWinnerRow(f, i));
-        return w;
-    }
-
-    private static char getWinnerDiag(String f, boolean left) {
-        int a = left ? 0 : 2;
-        char winner = f.charAt(a);
-        for (int i = a; i < ROWS * COLS - a; i += COLS - (a - 1))
-            if (winner != f.charAt(i)) return '_';
-        return winner;
-    }
-
-    private static char getWinnerCol(String f, int col) {
-        char winner = f.charAt(col);
-        for (int i = col; i < ROWS * COLS; i += COLS)
-            if (winner != f.charAt(i)) return '_';
-        return winner;
-    }
-
-    private static char getWinnerRow(String f, int row) {
-        char winner = f.charAt(row * COLS);
-        for (int i = row * COLS; i < row * COLS + COLS; i++)
-            if (winner != f.charAt(i)) return '_';
-        return winner;
-    }
-
-    private static void print(String f) {
-        // hardcoding a bit
-        System.out.println("+-------+");
-        System.out.printf("| %c %c %c |\n", f.charAt(0), f.charAt(1), f.charAt(2));
-        System.out.printf("| %c %c %c |\n", f.charAt(3), f.charAt(4), f.charAt(5));
-        System.out.printf("| %c %c %c |\n", f.charAt(6), f.charAt(7), f.charAt(8));
-        System.out.println("+-------+");
-    }
-
-    enum GameState {
-        PLAYING("Game not finished"),
-        FINISHED("Draw"),
-        X_WINS("X wins"),
-        O_WINS("O wins"),
-        ERROR("Impossible");
-        private final String msg;
-
-        GameState(String msg) {
-            this.msg = msg;
+    static char[][] ninetyRight(char[][] arr){ // rotates matrix to 90 degree right
+        char[][] carr = new char[3][3];
+        for(int i = 0; i < 3; i++){
+            for(int j = 0; j < 3; j++){
+                carr[i][j] = arr[i][j];
+            }
         }
 
-        @Override
-        public String toString() {
-            return msg;
+        int k = 2;
+        for(int i = 0; i < 3; i++){
+            arr[0][i] = carr[k][0];
+            arr[1][i] = carr[k][1];
+            arr[2][i] = carr[k][2];
+            k--;
         }
+        return arr;
+    }
+
+    static char[][] ninetyLeft(char[][] arr){ // rotates matrix to 90 degree left
+        for(int i = 0; i < 3; i++){
+            ninetyRight(arr);
+        }
+        return arr;
+    }
+
+    static boolean isEmpty(char[][] arr, int X, int Y){  // checks whether the chosen coordinates are empty
+        return (arr[X-1][Y-1] == ' ' || arr[X-1][Y-1] == '_');
     }
 }
